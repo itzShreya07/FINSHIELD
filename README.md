@@ -59,7 +59,7 @@ Interactive D3.js force-directed graph showing account relationships as nodes an
 Per-account behavioral profiles showing:
 - Daily transaction volume trends
 - Daily transaction count charts
-- ⚡ **Risk Score Timeline** — a line chart showing risk score spikes over time, with a configurable alert threshold line at 70%
+- **Risk Score Timeline** — a line chart showing risk score spikes over time, with a configurable alert threshold line at 70%
 
 ### Visual Fraud Map
 D3.js world map (`geoNaturalEarth1` projection) plotting transaction flows as **curved arcs** between origin and destination cities:
@@ -67,7 +67,7 @@ D3.js world map (`geoNaturalEarth1` projection) plotting transaction flows as **
 - 🟢 Green arcs — normal transactions
 - Hover tooltip shows full transaction details
 
-### ⚡ Fraud Simulation Mode
+### Fraud Simulation Mode
 One-click attack injection for demo and testing:
 
 | Simulation | Description |
