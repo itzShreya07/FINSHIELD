@@ -2,31 +2,24 @@
 import { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
 
-interface GeoPoint {
-    location: string;
-    count: number;
-    suspicious: number;
-    total_amount: number;
-    lat: number;
-    lon: number;
-    risk_level: "high" | "medium" | "low";
-}
-
-interface ImpossibleTravel {
+interface Transaction {
+    transaction_id: string;
     account_number: string;
-    owner_name: string;
-    location_1: string;
-    location_2: string;
-    transaction_1: string;
-    transaction_2: string;
-    time_diff_minutes: number;
-    distance_km: number;
-    timestamp_1: string;
-    timestamp_2: string;
-    severity: string;
+    amount: number;
+    risk_score: number; // Assuming 0-100
+    location_from: string;
+    location_to: string;
+    timestamp: string;
 }
 
 const riskColor = { high: "#ef4444", medium: "#eab308", low: "#22c55e" };
+
+// Helper to get risk level from score
+const getRiskLevel = (score: number) => {
+    if (score > 70) return "high";
+    if (score > 40) return "medium";
+    return "low";
+};
 
 // Approximate world map projection coords for our locations
 const LOCATION_COORDS: Record<string, [number, number]> = {
@@ -64,27 +57,25 @@ const SidebarNav = ({ active }: { active: string }) => {
 
 export default function GeoRiskPage() {
     const svgRef = useRef<SVGSVGElement>(null);
-    const [geoData, setGeoData] = useState<GeoPoint[]>([]);
-    const [impossibleTravel, setImpossibleTravel] = useState<ImpossibleTravel[]>([]);
-    const [tooltip, setTooltip] = useState<{ x: number; y: number; data: GeoPoint } | null>(null);
+    const [transactions, setTransactions] = useState<Transaction[]>([]);
+    const [tooltip, setTooltip] = useState<{ x: number; y: number; data: Transaction } | null>(null);
 
     useEffect(() => {
-        async function load() {
+        async function loadTransactions() {
             try {
-                const [g, i] = await Promise.all([
-                    fetch("/api/geo-risk/").then(r => r.json()),
-                    fetch("/api/geo-risk/impossible-travel").then(r => r.json()),
-                ]);
-                setGeoData(g);
-                setImpossibleTravel(i);
-            } catch { }
+                const response = await fetch("/api/transactions/");
+                const data = await response.json();
+                setTransactions(data);
+            } catch (error) {
+                console.error("Failed to fetch transactions:", error);
+            }
         }
-        load();
+        loadTransactions();
     }, []);
 
     // Draw map with D3 using a simple equirectangular projection
     useEffect(() => {
-        if (!svgRef.current) return;
+        if (!svgRef.current || transactions.length === 0) return;
 
         const svg = d3.select(svgRef.current);
         svg.selectAll("*").remove();
@@ -105,63 +96,43 @@ export default function GeoRiskPage() {
         svg.append("path").datum(graticule).attr("d", path as any)
             .attr("fill", "none").attr("stroke", "rgba(37,99,235,0.07)").attr("stroke-width", 0.5);
 
-        // Add location points
-        geoData.forEach(pt => {
-            const coords = LOCATION_COORDS[pt.location];
-            if (!coords) return;
-            const [px, py] = proj(coords) || [0, 0];
-            const radius = 8 + Math.sqrt(pt.count) * 3;
-            const color = riskColor[pt.risk_level];
-
-            // Glow ring
-            svg.append("circle")
-                .attr("cx", px).attr("cy", py)
-                .attr("r", radius + 6)
-                .attr("fill", "none")
-                .attr("stroke", color)
-                .attr("stroke-width", 1)
-                .attr("opacity", 0.3)
-                .style("animation", "pulse 2s infinite");
-
-            svg.append("circle")
-                .attr("cx", px).attr("cy", py)
-                .attr("r", radius)
-                .attr("fill", color + "44")
-                .attr("stroke", color)
-                .attr("stroke-width", 1.5)
-                .style("cursor", "pointer")
-                .on("mousemove", (event) => {
-                    setTooltip({ x: event.offsetX + 10, y: event.offsetY - 10, data: pt });
-                })
-                .on("mouseleave", () => setTooltip(null));
-
-            svg.append("text")
-                .attr("x", px).attr("y", py - radius - 4)
-                .attr("text-anchor", "middle")
-                .attr("fill", "#f1f5f9")
-                .attr("font-size", 10)
-                .attr("font-weight", "600")
-                .text(pt.location);
-        });
-
-        // Draw impossible travel arcs
-        impossibleTravel.slice(0, 5).forEach(travel => {
-            const c1 = LOCATION_COORDS[travel.location_1];
-            const c2 = LOCATION_COORDS[travel.location_2];
+        // Draw transaction arcs
+        transactions.forEach(tx => {
+            const c1 = LOCATION_COORDS[tx.location_from];
+            const c2 = LOCATION_COORDS[tx.location_to];
             if (!c1 || !c2) return;
+
             const [x1, y1] = proj(c1) || [0, 0];
             const [x2, y2] = proj(c2) || [0, 0];
-            const mx = (x1 + x2) / 2, my = Math.min(y1, y2) - 60;
+
+            // Calculate midpoint for arc curvature
+            const midX = (x1 + x2) / 2;
+            const midY = (y1 + y2) / 2;
+            const dx = x2 - x1;
+            const dy = y2 - y1;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+
+            // Adjust curvature based on distance
+            const curveFactor = dist / 10; // Smaller factor for less curve
+            const controlX = midX + (-dy / dist) * curveFactor;
+            const controlY = midY + (dx / dist) * curveFactor;
+
+            const riskLevel = getRiskLevel(tx.risk_score);
+            const color = riskColor[riskLevel];
 
             svg.append("path")
-                .attr("d", `M${x1},${y1} Q${mx},${my} ${x2},${y2}`)
+                .attr("d", `M${x1},${y1} Q${controlX},${controlY} ${x2},${y2}`)
                 .attr("fill", "none")
-                .attr("stroke", "#ef4444")
+                .attr("stroke", color)
                 .attr("stroke-width", 1.5)
-                .attr("stroke-dasharray", "6,4")
-                .attr("opacity", 0.7);
+                .attr("opacity", 0.7)
+                .style("cursor", "pointer")
+                .on("mousemove", (event) => {
+                    setTooltip({ x: event.offsetX + 10, y: event.offsetY - 10, data: tx });
+                })
+                .on("mouseleave", () => setTooltip(null));
         });
-    }, [geoData, impossibleTravel]);
+    }, [transactions]);
 
     return (
         <div className="app-layout">
@@ -170,13 +141,12 @@ export default function GeoRiskPage() {
                 <div className="page-header">
                     <div>
                         <h1>Geo-Risk Monitor</h1>
-                        <div className="subtitle">Geographic transaction patterns & impossible travel detection</div>
+                        <div className="subtitle">Real-time transaction flows & risk visualization</div>
                     </div>
                     <div style={{ display: "flex", gap: 16, fontSize: 12 }}>
                         <span style={{ color: "#ef4444" }}>● High Risk</span>
-                        <span style={{ color: "#eab308" }}>● Medium</span>
-                        <span style={{ color: "#22c55e" }}>● Low</span>
-                        <span style={{ color: "#ef4444" }}>--- Impossible Travel</span>
+                        <span style={{ color: "#eab308" }}>● Medium Risk</span>
+                        <span style={{ color: "#22c55e" }}>● Low Risk</span>
                     </div>
                 </div>
 
@@ -184,8 +154,8 @@ export default function GeoRiskPage() {
                     {/* Map */}
                     <div className="card" style={{ padding: 0, overflow: "hidden", position: "relative", marginBottom: 24 }}>
                         <div className="card-header">
-                            <span className="card-title">🌍 Transaction Origin Map</span>
-                            <span style={{ fontSize: 11, color: "var(--text-muted)" }}>Node size = transaction volume</span>
+                            <span className="card-title">🌍 Transaction Flow Map</span>
+                            <span style={{ fontSize: 11, color: "var(--text-muted)" }}>Arcs represent transactions, color indicates risk</span>
                         </div>
                         <svg ref={svgRef} style={{ width: "100%", height: 420 }} />
                         {tooltip && (
@@ -194,61 +164,49 @@ export default function GeoRiskPage() {
                                 background: "rgba(6,9,26,0.97)", border: "1px solid rgba(37,99,235,0.25)",
                                 borderRadius: 8, padding: "10px 14px", fontSize: 12, pointerEvents: "none",
                             }}>
-                                <div style={{ fontWeight: 700, color: "#f1f5f9", marginBottom: 6 }}>{tooltip.data.location}</div>
-                                <div>Transactions: <strong>{tooltip.data.count}</strong></div>
-                                <div>Suspicious: <strong style={{ color: "#ef4444" }}>{tooltip.data.suspicious}</strong></div>
-                                <div>Volume: <strong>₹{tooltip.data.total_amount.toLocaleString("en-IN", { maximumFractionDigits: 0 })}</strong></div>
-                                <div>Risk: <strong style={{ color: riskColor[tooltip.data.risk_level] }}>{tooltip.data.risk_level.toUpperCase()}</strong></div>
+                                <div style={{ fontWeight: 700, color: "#f1f5f9", marginBottom: 6 }}>Transaction ID: {tooltip.data.transaction_id}</div>
+                                <div>Account: <strong>{tooltip.data.account_number}</strong></div>
+                                <div>Amount: <strong>₹{tooltip.data.amount.toLocaleString("en-IN", { maximumFractionDigits: 0 })}</strong></div>
+                                <div>From: <strong>{tooltip.data.location_from}</strong></div>
+                                <div>To: <strong>{tooltip.data.location_to}</strong></div>
+                                <div>Risk Score: <strong style={{ color: riskColor[getRiskLevel(tooltip.data.risk_score)] }}>{tooltip.data.risk_score} ({getRiskLevel(tooltip.data.risk_score).toUpperCase()})</strong></div>
                             </div>
                         )}
                     </div>
 
-                    {/* Location summary table */}
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
-                        <div className="card">
-                            <div className="card-header"><span className="card-title">Location Risk Summary</span></div>
-                            <div className="data-table-wrap">
-                                <table className="data-table">
-                                    <thead><tr><th>Location</th><th>Txns</th><th>Suspicious</th><th>Risk</th></tr></thead>
-                                    <tbody>
-                                        {geoData.sort((a, b) => b.suspicious - a.suspicious).map(g => (
-                                            <tr key={g.location}>
-                                                <td>📍 {g.location}</td>
-                                                <td>{g.count}</td>
-                                                <td style={{ color: g.suspicious > 0 ? "#ef4444" : "var(--text-muted)" }}>{g.suspicious}</td>
-                                                <td><span className={`badge badge-${g.risk_level}`}>{g.risk_level}</span></td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
+                    {/* Transaction list table */}
+                    <div className="card">
+                        <div className="card-header">
+                            <span className="card-title">Recent Transactions</span>
+                            <span className="badge badge-info">{transactions.length}</span>
                         </div>
-
-                        <div className="card">
-                            <div className="card-header">
-                                <span className="card-title">⚡ Impossible Travel Alerts</span>
-                                <span className="badge badge-critical">{impossibleTravel.length}</span>
-                            </div>
-                            <div style={{ overflowY: "auto", maxHeight: 380 }}>
-                                {impossibleTravel.length === 0 ? (
-                                    <div className="empty-state" style={{ padding: 24 }}>
-                                        <div>No impossible travel detected</div>
-                                    </div>
-                                ) : impossibleTravel.map((t, i) => (
-                                    <div key={i} style={{ padding: "14px 16px", borderBottom: "1px solid var(--border-subtle)" }}>
-                                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-                                            <span style={{ fontWeight: 700, fontSize: 13 }}>{t.owner_name}</span>
-                                            <span className={`badge badge-${t.severity}`}>{t.severity}</span>
-                                        </div>
-                                        <div style={{ fontSize: 12, color: "var(--text-secondary)", marginBottom: 4 }}>
-                                            {t.location_1} → {t.location_2}
-                                        </div>
-                                        <div style={{ fontSize: 11, color: "var(--text-muted)" }}>
-                                            {t.distance_km.toLocaleString()} km in {t.time_diff_minutes} min
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
+                        <div className="data-table-wrap">
+                            <table className="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Account</th>
+                                        <th>From</th>
+                                        <th>To</th>
+                                        <th>Amount</th>
+                                        <th>Risk</th>
+                                        <th>Timestamp</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {transactions.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()).map(tx => (
+                                        <tr key={tx.transaction_id}>
+                                            <td>{tx.transaction_id.substring(0, 8)}...</td>
+                                            <td>{tx.account_number}</td>
+                                            <td>{tx.location_from}</td>
+                                            <td>{tx.location_to}</td>
+                                            <td>₹{tx.amount.toLocaleString("en-IN", { maximumFractionDigits: 0 })}</td>
+                                            <td><span className={`badge badge-${getRiskLevel(tx.risk_score)}`}>{tx.risk_score}</span></td>
+                                            <td>{new Date(tx.timestamp).toLocaleString()}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>

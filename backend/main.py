@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from database import engine
 from models import Base
-from routers import transactions, alerts, behavioral, geo_risk, scam_intel, network_graph
+from routers import transactions, alerts, behavioral, geo_risk, scam_intel, network_graph, simulate
 
 # Create all tables on startup
 Base.metadata.create_all(bind=engine)
@@ -27,6 +27,7 @@ app.include_router(behavioral.router)
 app.include_router(geo_risk.router)
 app.include_router(scam_intel.router)
 app.include_router(network_graph.router)
+app.include_router(simulate.router)
 
 
 @app.get("/")

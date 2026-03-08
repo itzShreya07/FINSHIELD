@@ -1,6 +1,8 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
-import DashboardLayout from "@/components/Sidebar";
+import RiskScoreModal from "@/components/RiskScoreModal";
+import SimulationPanel from "@/components/SimulationPanel";
+import FraudAssistant from "@/components/FraudAssistant";
 
 interface Transaction {
     transaction_id: string;
@@ -62,6 +64,10 @@ export default function TransactionMonitor() {
     const [newIds, setNewIds] = useState<Set<string>>(new Set());
     const evtRef = useRef<EventSource | null>(null);
 
+    const [showRiskScoreModal, setShowRiskScoreModal] = useState(false);
+    const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
+    const [showFraudAssistant, setShowFraudAssistant] = useState(false);
+
     // Load historical transactions
     useEffect(() => {
         async function load() {
@@ -119,6 +125,9 @@ export default function TransactionMonitor() {
                         <button className="btn btn-ghost" onClick={() => setIsStreaming(v => !v)}>
                             {isStreaming ? "⏸ Pause" : "▶ Resume"}
                         </button>
+                        <button className="btn btn-primary" onClick={() => setShowFraudAssistant(true)}>
+                            Ask Fraud Assistant
+                        </button>
                     </div>
                 </div>
 
@@ -152,6 +161,9 @@ export default function TransactionMonitor() {
                             </div>
                         </div>
                     )}
+
+                    {/* Simulation Panel */}
+                    <SimulationPanel />
 
                     {/* Filters */}
                     <div className="toolbar">
@@ -198,6 +210,7 @@ export default function TransactionMonitor() {
                                         <tr
                                             key={t.transaction_id}
                                             className={`${t.status === "suspicious" ? "suspicious-row" : ""} ${newIds.has(t.transaction_id) ? "new-row" : ""}`}
+                                            onClick={() => { setSelectedTransaction(t); setShowRiskScoreModal(true); }}
                                         >
                                             <td className="mono" style={{ fontSize: 11, color: "var(--accent-cyan)" }}>{t.transaction_id}</td>
                                             <td>
@@ -238,6 +251,17 @@ export default function TransactionMonitor() {
                     </div>
                 </div>
             </div>
+
+            <RiskScoreModal
+                data={selectedTransaction}
+                onClose={() => { setSelectedTransaction(null); setShowRiskScoreModal(false); }}
+            />
+
+            <FraudAssistant
+                isOpen={showFraudAssistant}
+                onClose={() => setShowFraudAssistant(false)}
+                transactions={transactions}
+            />
         </div>
     );
 }
