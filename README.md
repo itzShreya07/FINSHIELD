@@ -270,5 +270,5 @@ Dashboard available at: [http://localhost:3000](http://localhost:3000)
 
 
 <div align="center">
-  <sub>Built with ❤️ as a portfolio project demonstrating real-world fintech fraud detection systems</sub>
+  <sub>Built with as a portfolio project demonstrating real-world fintech fraud detection systems</sub>
 </div>
