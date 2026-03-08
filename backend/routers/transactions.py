@@ -9,10 +9,15 @@ from fastapi import APIRouter, Depends, Query
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
-from database import get_db
-from models import Transaction, Account
+from database import get_db, SessionLocal # Added SessionLocal import
+from models import Transaction, Account, RiskScore, FraudAlert # Imported RiskScore, FraudAlert
 from fraud_engine import assess_transaction
 from faker import Faker
+import logging # New import
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 fake = Faker("en_IN")
 router = APIRouter(prefix="/api/transactions", tags=["transactions"])
@@ -92,73 +97,163 @@ def transaction_stats(db: Session = Depends(get_db)):
     }
 
 
-def generate_live_transaction(db: Session):
-    """Generate a single simulated transaction using DB accounts."""
-    accounts = db.query(Account).all()
-    if not accounts:
-        return None
-    sender = random.choice(accounts)
-    receiver = random.choice([a for a in accounts if a.id != sender.id])
-    loc = random.choice(LOCATIONS)
-    amount = random.choice([
-        random.uniform(500, 5000),
-        random.uniform(5000, 25000),
-        random.uniform(25000, 200000),
-    ])
-    is_new_device = random.random() < 0.25
-    is_new_recipient = random.random() < 0.30
-    geo_mismatch = random.random() < 0.20
+def _save_one_transaction() -> dict | None:
+    """
+    Fully self-contained: opens its own fresh SessionLocal, generates a
+    transaction, persists Transaction + RiskScore + FraudAlert, commits,
+    closes the session, and returns the dict for the SSE event.
 
-    risk_score, status, _, fraud_reason, behavioral = assess_transaction(
-        amount=amount,
-        avg_transaction_amount=sender.avg_transaction_amount or 10000,
-        is_new_recipient=is_new_recipient,
-        is_new_device=is_new_device,
-        geo_mismatch=geo_mismatch,
-    )
+    Key design decisions:
+    - No shared session parameter: every call is completely isolated so a
+      previous DB error can never poison the next iteration.
+    - UUID-based transaction_id: zero possibility of collision.
+    """
+    db = SessionLocal()
+    try:
+        accounts = db.query(Account).all()
+        if not accounts:
+            logger.warning("No accounts found — run seed_data.py first.")
+            return None
 
-    return {
-        "transaction_id": f"TXN{random.randint(90000, 99999):05d}",
-        "sender_account": sender.account_number,
-        "sender_name": sender.owner_name,
-        "receiver_account": receiver.account_number,
-        "receiver_name": receiver.owner_name,
-        "amount": round(amount, 2),
-        "timestamp": datetime.utcnow().isoformat(),
-        "location": loc[0],
-        "latitude": loc[1],
-        "longitude": loc[2],
-        "device_id": f"DEV-{fake.md5()[:8].upper()}",
-        "account_age_days": sender.account_age_days,
-        "is_new_device": is_new_device,
-        "is_new_recipient": is_new_recipient,
-        "geo_mismatch": geo_mismatch,
-        "behavioral_anomaly": behavioral,
-        "risk_score": risk_score,
-        "status": status,
-        "fraud_reason": fraud_reason,
-    }
+        sender = random.choice(accounts)
+        receiver = random.choice([a for a in accounts if a.id != sender.id])
+        loc = random.choice(LOCATIONS)
+        amount = random.choice([
+            random.uniform(500, 5000),
+            random.uniform(5000, 25000),
+            random.uniform(25000, 200000),
+        ])
+        is_new_device   = random.random() < 0.25
+        is_new_recipient = random.random() < 0.30
+        geo_mismatch    = random.random() < 0.20
+        device_id = f"DEV-{fake.md5()[:8].upper()}"
+        txn_id    = f"LIVE-{uuid.uuid4().hex[:10].upper()}"  # guaranteed unique
+        now = datetime.utcnow()
+
+        risk_score, status, breakdown, fraud_reason, behavioral = assess_transaction(
+            amount=amount,
+            avg_transaction_amount=sender.avg_transaction_amount or 10000,
+            is_new_recipient=is_new_recipient,
+            is_new_device=is_new_device,
+            geo_mismatch=geo_mismatch,
+        )
+
+        txn_row = Transaction(
+            id=str(uuid.uuid4()),
+            transaction_id=txn_id,
+            sender_account_id=sender.id,
+            receiver_account_id=receiver.id,
+            amount=round(amount, 2),
+            timestamp=now,
+            location=loc[0],
+            latitude=loc[1],
+            longitude=loc[2],
+            device_id=device_id,
+            is_new_device=is_new_device,
+            is_new_recipient=is_new_recipient,
+            geo_mismatch=geo_mismatch,
+            behavioral_anomaly=behavioral,
+            risk_score=risk_score,
+            status=status,
+            fraud_reason=fraud_reason,
+        )
+        db.add(txn_row)
+
+        rs_row = RiskScore(
+            id=str(uuid.uuid4()),
+            transaction_id=txn_row.id,
+            amount_score=breakdown.get("amount_score", 0.0),
+            new_recipient_score=breakdown.get("new_recipient_score", 0.0),
+            new_device_score=breakdown.get("new_device_score", 0.0),
+            geo_mismatch_score=breakdown.get("geo_mismatch_score", 0.0),
+            behavioral_score=breakdown.get("behavioral_score", 0.0),
+            total_score=risk_score,
+        )
+        db.add(rs_row)
+
+        if status == "suspicious":
+            sev = "critical" if risk_score >= 0.90 else "high" if risk_score >= 0.80 else "medium"
+            action_map = {
+                "critical": "Immediately freeze account and escalate to fraud team",
+                "high":     "Block transaction and request identity verification",
+                "medium":   "Flag for manual review within 24 hours",
+            }
+            db.add(FraudAlert(
+                id=str(uuid.uuid4()),
+                transaction_id=txn_row.id,
+                alert_type="high_risk",
+                severity=sev,
+                fraud_reason=fraud_reason,
+                risk_score=risk_score,
+                recommended_action=action_map[sev],
+                account_id=sender.id,
+            ))
+            sender.is_flagged = True
+
+        db.commit()  # ← commit happens HERE, inside the function
+        logger.info(
+            "[DB SAVED] %s | %s → %s | ₹%.0f | risk=%.2f | %s",
+            txn_id, sender.account_number, receiver.account_number,
+            amount, risk_score, status.upper(),
+        )
+
+        return {
+            "transaction_id": txn_id,
+            "sender_account":  sender.account_number,
+            "sender_name":     sender.owner_name,
+            "receiver_account": receiver.account_number,
+            "receiver_name":   receiver.owner_name,
+            "amount":          round(amount, 2),
+            "timestamp":       now.isoformat(),
+            "location":        loc[0],
+            "latitude":        loc[1],
+            "longitude":       loc[2],
+            "device_id":       device_id,
+            "account_age_days": sender.account_age_days,
+            "is_new_device":   is_new_device,
+            "is_new_recipient": is_new_recipient,
+            "geo_mismatch":    geo_mismatch,
+            "behavioral_anomaly": behavioral,
+            "risk_score":      risk_score,
+            "status":          status,
+            "fraud_reason":    fraud_reason,
+        }
+
+    except Exception as exc:
+        db.rollback()
+        logger.error("[DB ERROR] Failed to save transaction: %s", exc)
+        raise
+    finally:
+        db.close()  # always released, even on error
+
 
 
 @router.get("/stream")
 async def stream_transactions():
-    """SSE endpoint — emits a new simulated transaction every 2 seconds."""
+    """
+    SSE endpoint — every 2 seconds:
+    1. asyncio.to_thread(_save_one_transaction) runs the synchronous DB write
+       in a thread pool so the async event loop stays responsive.
+    2. _save_one_transaction() opens its OWN fresh session, commits, and closes
+       it — a broken session from one iteration cannot affect the next.
+    3. The saved transaction is immediately yielded as an SSE event.
+    """
     async def event_generator():
-        from database import SessionLocal
-        db = SessionLocal()
-        try:
-            count = 0
-            while count < 500:
-                txn_data = generate_live_transaction(db)
+        count = 0
+        while count < 500:
+            try:
+                txn_data = await asyncio.to_thread(_save_one_transaction)
                 if txn_data:
                     yield f"data: {json.dumps(txn_data)}\n\n"
-                await asyncio.sleep(2)
-                count += 1
-        finally:
-            db.close()
+            except Exception as exc:
+                logger.error("Stream iteration error: %s", exc)
+                yield f"data: {json.dumps({'error': str(exc)})}\n\n"
+            await asyncio.sleep(2)
+            count += 1
 
     return StreamingResponse(
         event_generator(),
         media_type="text/event-stream",
         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )
+

@@ -149,11 +149,16 @@ def seed():
             alerts.append(alert)
             sender.is_flagged = True
 
+    # Commit in FK-dependent order
     db.add_all(transactions)
+    db.commit() # Commit transactions first
+
     db.add_all(risk_scores)
-    db.commit()
+    db.commit() # Then commit risk_scores
+
     db.add_all(alerts)
-    db.commit()
+    db.commit() # Then commit alerts
+
     db.close()
     print(f"✅ Seed complete: {len(accounts)} accounts, {len(transactions)} transactions, {len(alerts)} alerts")
 
