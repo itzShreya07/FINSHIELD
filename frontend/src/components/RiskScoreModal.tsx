@@ -93,7 +93,7 @@ export default function RiskScoreModal({ data, onClose }: Props) {
                         <span style={{ fontSize: 48, fontWeight: 900, color: totalColor, lineHeight: 1 }}>{totalPct}</span>
                         <span style={{ fontSize: 20, color: totalColor, fontWeight: 700 }}>/ 100</span>
                         <span className={`badge badge-${isSuspicious ? "suspicious" : "normal"}`} style={{ fontSize: 13, padding: "5px 14px" }}>
-                            {isSuspicious ? "⚠️ SUSPICIOUS" : "✅ NORMAL"}
+                            {isSuspicious ? "SUSPICIOUS" : "NORMAL"}
                         </span>
                     </div>
                 </div>
@@ -113,11 +113,11 @@ export default function RiskScoreModal({ data, onClose }: Props) {
                     <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: 16 }}>
                         Score Breakdown
                     </div>
-                    <ScoreBar label="Transaction Amount" value={data.amount_score ?? 0} icon="💰" />
-                    <ScoreBar label="New Device Detected" value={data.new_device_score ?? 0} icon="📱" />
-                    <ScoreBar label="Geo Location Mismatch" value={data.geo_mismatch_score ?? 0} icon="🌍" />
-                    <ScoreBar label="New Recipient" value={data.new_recipient_score ?? 0} icon="👤" />
-                    <ScoreBar label="Behavioral Anomaly" value={data.behavioral_score ?? 0} icon="📊" />
+                    <ScoreBar label="Transaction Amount" value={data.amount_score ?? 0} icon="AMT" />
+                    <ScoreBar label="New Device Detected" value={data.new_device_score ?? 0} icon="DEV" />
+                    <ScoreBar label="Geo Location Mismatch" value={data.geo_mismatch_score ?? 0} icon="GEO" />
+                    <ScoreBar label="New Recipient" value={data.new_recipient_score ?? 0} icon="REC" />
+                    <ScoreBar label="Behavioral Anomaly" value={data.behavioral_score ?? 0} icon="BEH" />
                 </div>
 
                 {/* Reason */}
@@ -135,7 +135,7 @@ export default function RiskScoreModal({ data, onClose }: Props) {
 
                 {data.amount && (
                     <div style={{ marginTop: 12, display: "flex", gap: 16, fontSize: 12, color: "var(--text-muted)" }}>
-                        <span>💸 Amount: <strong style={{ color: "var(--text-primary)" }}>₹{data.amount.toLocaleString("en-IN", { maximumFractionDigits: 0 })}</strong></span>
+                        <span>Amount: <strong style={{ color: "var(--text-primary)" }}>₹{data.amount.toLocaleString("en-IN", { maximumFractionDigits: 0 })}</strong></span>
                         {data.sender_account && <span>From: <strong style={{ color: "var(--text-primary)" }}>{data.sender_account}</strong></span>}
                     </div>
                 )}

@@ -10,29 +10,29 @@ interface ScamResult {
 }
 
 const riskColor = { critical: "#ef4444", high: "#f97316", medium: "#eab308", low: "#22c55e" };
-const riskEmoji = { critical: "🚨", high: "⚠️", medium: "🔶", low: "✅" };
+const riskLabel = { critical: "CRITICAL", high: "HIGH", medium: "MEDIUM", low: "LOW" };
 
 const SidebarNav = ({ active }: { active: string }) => {
     const links = [
-        { href: "/", label: "Transaction Monitor", icon: "📊" },
-        { href: "/alerts", label: "Fraud Alerts", icon: "🚨" },
-        { href: "/network", label: "Fraud Network", icon: "🕸️" },
-        { href: "/behavioral", label: "Behavioral Analysis", icon: "📈" },
-        { href: "/geo-risk", label: "Geo-Risk Monitor", icon: "🌍" },
-        { href: "/scam-intel", label: "Scam Intel Tool", icon: "🔍" },
+        { href: "/", label: "Transaction Monitor" },
+        { href: "/alerts", label: "Fraud Alerts" },
+        { href: "/network", label: "Fraud Network" },
+        { href: "/behavioral", label: "Behavioral Analysis" },
+        { href: "/geo-risk", label: "Geo-Risk Monitor" },
+        { href: "/scam-intel", label: "Scam Intel Tool" },
     ];
     return (
         <aside className="sidebar">
-            <div className="sidebar-logo"><div className="logo-text">🛡️ FinShield</div><div className="logo-sub">Fraud Intelligence Platform</div></div>
+            <div className="sidebar-logo"><div className="logo-text">FinShield</div><div className="logo-sub">Fraud Intelligence Platform</div></div>
             <nav className="sidebar-nav">
                 <div className="nav-section-label">Monitoring</div>
-                {links.slice(0, 2).map(l => <a key={l.href} href={l.href} className={`nav-item ${active === l.href ? "active" : ""}`}><span>{l.icon}</span><span>{l.label}</span></a>)}
+                {links.slice(0, 2).map(l => <a key={l.href} href={l.href} className={`nav-item ${active === l.href ? "active" : ""}`}><span>{l.label}</span></a>)}
                 <div className="nav-section-label">Intelligence</div>
-                {links.slice(2, 5).map(l => <a key={l.href} href={l.href} className={`nav-item ${active === l.href ? "active" : ""}`}><span>{l.icon}</span><span>{l.label}</span></a>)}
+                {links.slice(2, 5).map(l => <a key={l.href} href={l.href} className={`nav-item ${active === l.href ? "active" : ""}`}><span>{l.label}</span></a>)}
                 <div className="nav-section-label">Tools</div>
-                {links.slice(5).map(l => <a key={l.href} href={l.href} className={`nav-item ${active === l.href ? "active" : ""}`}><span>{l.icon}</span><span>{l.label}</span></a>)}
+                {links.slice(5).map(l => <a key={l.href} href={l.href} className={`nav-item ${active === l.href ? "active" : ""}`}><span>{l.label}</span></a>)}
             </nav>
-            <div className="sidebar-footer"><span className="status-dot" /> System Online</div>
+            <div className="sidebar-footer"><span className="status-dot" /> System Online · v2.0.0</div>
         </aside>
     );
 };
@@ -95,7 +95,7 @@ export default function ScamIntelPage() {
                         <div>
                             {/* Input form */}
                             <div className="card" style={{ padding: 28, marginBottom: 24 }}>
-                                <div className="section-title" style={{ marginBottom: 20 }}>🔍 Intelligence Check</div>
+                                <div className="section-title" style={{ marginBottom: 20 }}>Intelligence Check</div>
                                 <div style={{ marginBottom: 16 }}>
                                     <label style={{ fontSize: 12, color: "var(--text-muted)", display: "block", marginBottom: 8 }}>
                                         ENTER UPI ID / PHONE NUMBER / PAYMENT LINK
@@ -110,7 +110,7 @@ export default function ScamIntelPage() {
                                             onKeyDown={e => e.key === "Enter" && check()}
                                         />
                                         <button className="btn btn-primary" onClick={check} disabled={loading} style={{ padding: "12px 24px", fontSize: 14 }}>
-                                            {loading ? "Checking…" : "🔍 Analyze"}
+                                            {loading ? "Checking..." : "Analyze"}
                                         </button>
                                     </div>
                                 </div>
@@ -133,7 +133,7 @@ export default function ScamIntelPage() {
                                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
                                         <div>
                                             <div style={{ fontSize: 26, fontWeight: 800, color: riskColor[result.risk_level], marginBottom: 4 }}>
-                                                {riskEmoji[result.risk_level]} {fillPercent}% Scam Probability
+                                                {riskLabel[result.risk_level]} — {fillPercent}% Scam Probability
                                             </div>
                                             <div className="mono" style={{ fontSize: 12, color: "var(--text-muted)" }}>{result.input}</div>
                                         </div>
@@ -186,7 +186,7 @@ export default function ScamIntelPage() {
                         {/* Sidebar: history + tips */}
                         <div>
                             <div className="card" style={{ marginBottom: 16 }}>
-                                <div className="card-header"><span className="card-title">📋 Recent Checks</span></div>
+                                <div className="card-header"><span className="card-title">Recent Checks</span></div>
                                 {history.length === 0 ? (
                                     <div style={{ padding: 16, fontSize: 12, color: "var(--text-muted)" }}>No checks yet</div>
                                 ) : history.map((h, i) => (
@@ -205,7 +205,7 @@ export default function ScamIntelPage() {
                             </div>
 
                             <div className="card" style={{ padding: 16 }}>
-                                <div className="card-header" style={{ padding: "0 0 12px" }}><span className="card-title">💡 Safety Tips</span></div>
+                                <div className="card-header" style={{ padding: "0 0 12px" }}><span className="card-title">Safety Tips</span></div>
                                 {[
                                     "Never pay to unknown UPI IDs received via SMS",
                                     "Verify payment links before clicking — banks never ask via message",

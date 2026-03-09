@@ -50,7 +50,7 @@ function RiskBar({ score }: { score: number }) {
 function StatusBadge({ status }: { status: string }) {
     return (
         <span className={`badge badge-${status}`}>
-            {status === "suspicious" ? "⚠ Suspicious" : "✓ Normal"}
+            {status === "suspicious" ? "Suspicious" : "Normal"}
         </span>
     );
 }
@@ -97,7 +97,7 @@ export default function TransactionMonitor() {
                 const next = [txn, ...prev].slice(0, 100);
                 return next;
             });
-            setNewIds((prev) => new Set([...prev, txn.transaction_id]));
+            setNewIds((prev) => new Set(Array.from(prev).concat(txn.transaction_id)));
             setTimeout(() => setNewIds((prev) => { const n = new Set(prev); n.delete(txn.transaction_id); return n; }), 1500);
         };
         return () => es.close();
@@ -139,25 +139,25 @@ export default function TransactionMonitor() {
                                 <div className="stat-label">Total Transactions</div>
                                 <div className="stat-value">{stats.total.toLocaleString()}</div>
                                 <div className="stat-sub">All time</div>
-                                <div className="stat-icon" style={{ background: "rgba(37,99,235,0.15)", color: "#3b82f6" }}>📊</div>
+                                <div className="stat-icon" style={{ background: "rgba(37,99,235,0.15)", color: "#3b82f6" }}>TXN</div>
                             </div>
                             <div className="stat-card red">
                                 <div className="stat-label">Suspicious</div>
                                 <div className="stat-value" style={{ color: "#ef4444" }}>{stats.suspicious}</div>
                                 <div className="stat-sub">{stats.fraud_rate}% fraud rate</div>
-                                <div className="stat-icon" style={{ background: "rgba(239,68,68,0.12)", color: "#ef4444" }}>🚨</div>
+                                <div className="stat-icon" style={{ background: "rgba(239,68,68,0.12)", color: "#ef4444" }}>SUS</div>
                             </div>
                             <div className="stat-card green">
                                 <div className="stat-label">Normal</div>
                                 <div className="stat-value" style={{ color: "#22c55e" }}>{stats.normal}</div>
                                 <div className="stat-sub">Cleared transactions</div>
-                                <div className="stat-icon" style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e" }}>✅</div>
+                                <div className="stat-icon" style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e" }}>OK</div>
                             </div>
                             <div className="stat-card yellow">
                                 <div className="stat-label">Avg Amount</div>
                                 <div className="stat-value" style={{ fontSize: 22, color: "#eab308" }}>₹{stats.avg_amount?.toLocaleString("en-IN", { maximumFractionDigits: 0 })}</div>
                                 <div className="stat-sub">Per transaction</div>
-                                <div className="stat-icon" style={{ background: "rgba(234,179,8,0.12)", color: "#eab308" }}>💰</div>
+                                <div className="stat-icon" style={{ background: "rgba(234,179,8,0.12)", color: "#eab308" }}>AVG</div>
                             </div>
                         </div>
                     )}
@@ -229,9 +229,8 @@ export default function TransactionMonitor() {
                                             </td>
                                             <td>
                                                 <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                                                    <span style={{ fontSize: 13 }}>📍</span>
                                                     <span style={{ fontSize: 12 }}>{t.location}</span>
-                                                    {t.geo_mismatch && <span title="Geo Mismatch" style={{ fontSize: 10, color: "#ef4444" }}>⚡</span>}
+                                                    {t.geo_mismatch && <span title="Geo Mismatch" style={{ fontSize: 10, color: "#ef4444", fontWeight: 700 }}>GEO</span>}
                                                 </div>
                                             </td>
                                             <td>
@@ -269,28 +268,28 @@ export default function TransactionMonitor() {
 // Inline sidebar to avoid circular import in root page
 function SidebarContent({ active }: { active: string }) {
     const links = [
-        { href: "/", label: "Transaction Monitor", icon: "📊" },
-        { href: "/alerts", label: "Fraud Alerts", icon: "🚨" },
-        { href: "/network", label: "Fraud Network", icon: "🕸️" },
-        { href: "/behavioral", label: "Behavioral Analysis", icon: "📈" },
-        { href: "/geo-risk", label: "Geo-Risk Monitor", icon: "🌍" },
-        { href: "/scam-intel", label: "Scam Intel Tool", icon: "🔍" },
+        { href: "/", label: "Transaction Monitor" },
+        { href: "/alerts", label: "Fraud Alerts" },
+        { href: "/network", label: "Fraud Network" },
+        { href: "/behavioral", label: "Behavioral Analysis" },
+        { href: "/geo-risk", label: "Geo-Risk Monitor" },
+        { href: "/scam-intel", label: "Scam Intel Tool" },
     ];
     return (
         <>
             <div className="sidebar-logo">
-                <div className="logo-text">🛡️ FinShield</div>
+                <div className="logo-text">FinShield</div>
                 <div className="logo-sub">Fraud Intelligence Platform</div>
             </div>
             <nav className="sidebar-nav">
                 <div className="nav-section-label">Monitoring</div>
-                {links.slice(0, 2).map(l => <a key={l.href} href={l.href} className={`nav-item ${active === l.href ? "active" : ""}`}><span>{l.icon}</span><span>{l.label}</span></a>)}
+                {links.slice(0, 2).map(l => <a key={l.href} href={l.href} className={`nav-item ${active === l.href ? "active" : ""}`}><span>{l.label}</span></a>)}
                 <div className="nav-section-label">Intelligence</div>
-                {links.slice(2, 5).map(l => <a key={l.href} href={l.href} className={`nav-item ${active === l.href ? "active" : ""}`}><span>{l.icon}</span><span>{l.label}</span></a>)}
+                {links.slice(2, 5).map(l => <a key={l.href} href={l.href} className={`nav-item ${active === l.href ? "active" : ""}`}><span>{l.label}</span></a>)}
                 <div className="nav-section-label">Tools</div>
-                {links.slice(5).map(l => <a key={l.href} href={l.href} className={`nav-item ${active === l.href ? "active" : ""}`}><span>{l.icon}</span><span>{l.label}</span></a>)}
+                {links.slice(5).map(l => <a key={l.href} href={l.href} className={`nav-item ${active === l.href ? "active" : ""}`}><span>{l.label}</span></a>)}
             </nav>
-            <div className="sidebar-footer"><span className="status-dot" /> System Online · v1.0.0</div>
+            <div className="sidebar-footer"><span className="status-dot" /> System Online · v2.0.0</div>
         </>
     );
 }

@@ -17,25 +17,25 @@ interface AccountBehavior {
 
 const SidebarNav = ({ active }: { active: string }) => {
     const links = [
-        { href: "/", label: "Transaction Monitor", icon: "📊" },
-        { href: "/alerts", label: "Fraud Alerts", icon: "🚨" },
-        { href: "/network", label: "Fraud Network", icon: "🕸️" },
-        { href: "/behavioral", label: "Behavioral Analysis", icon: "📈" },
-        { href: "/geo-risk", label: "Geo-Risk Monitor", icon: "🌍" },
-        { href: "/scam-intel", label: "Scam Intel Tool", icon: "🔍" },
+        { href: "/", label: "Transaction Monitor" },
+        { href: "/alerts", label: "Fraud Alerts" },
+        { href: "/network", label: "Fraud Network" },
+        { href: "/behavioral", label: "Behavioral Analysis" },
+        { href: "/geo-risk", label: "Geo-Risk Monitor" },
+        { href: "/scam-intel", label: "Scam Intel Tool" },
     ];
     return (
         <aside className="sidebar">
-            <div className="sidebar-logo"><div className="logo-text">🛡️ FinShield</div><div className="logo-sub">Fraud Intelligence Platform</div></div>
+            <div className="sidebar-logo"><div className="logo-text">FinShield</div><div className="logo-sub">Fraud Intelligence Platform</div></div>
             <nav className="sidebar-nav">
                 <div className="nav-section-label">Monitoring</div>
-                {links.slice(0, 2).map(l => <a key={l.href} href={l.href} className={`nav-item ${active === l.href ? "active" : ""}`}><span>{l.icon}</span><span>{l.label}</span></a>)}
+                {links.slice(0, 2).map(l => <a key={l.href} href={l.href} className={`nav-item ${active === l.href ? "active" : ""}`}><span>{l.label}</span></a>)}
                 <div className="nav-section-label">Intelligence</div>
-                {links.slice(2, 5).map(l => <a key={l.href} href={l.href} className={`nav-item ${active === l.href ? "active" : ""}`}><span>{l.icon}</span><span>{l.label}</span></a>)}
+                {links.slice(2, 5).map(l => <a key={l.href} href={l.href} className={`nav-item ${active === l.href ? "active" : ""}`}><span>{l.label}</span></a>)}
                 <div className="nav-section-label">Tools</div>
-                {links.slice(5).map(l => <a key={l.href} href={l.href} className={`nav-item ${active === l.href ? "active" : ""}`}><span>{l.icon}</span><span>{l.label}</span></a>)}
+                {links.slice(5).map(l => <a key={l.href} href={l.href} className={`nav-item ${active === l.href ? "active" : ""}`}><span>{l.label}</span></a>)}
             </nav>
-            <div className="sidebar-footer"><span className="status-dot" /> System Online</div>
+            <div className="sidebar-footer"><span className="status-dot" /> System Online · v2.0.0</div>
         </aside>
     );
 };

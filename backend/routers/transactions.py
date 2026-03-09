@@ -34,6 +34,15 @@ LOCATIONS = [
 def txn_to_dict(txn: Transaction, db: Session):
     sender = db.query(Account).filter(Account.id == txn.sender_account_id).first()
     receiver = db.query(Account).filter(Account.id == txn.receiver_account_id).first()
+
+    # Determine receiver city: pick a different city from LOCATIONS based on txn id
+    sender_city = next((name for name, lat, lng in LOCATIONS if lat == round(txn.latitude or 0, 3)), None)
+    txn_hash = sum(ord(c) for c in txn.transaction_id) if txn.transaction_id else 0
+    recv_city_name, recv_lat, recv_lng = LOCATIONS[txn_hash % len(LOCATIONS)]
+    # Avoid same-city arcs: shift by 1 if same
+    if recv_city_name == (txn.location or ""):
+        recv_city_name, recv_lat, recv_lng = LOCATIONS[(txn_hash + 1) % len(LOCATIONS)]
+
     return {
         "id": txn.id,
         "transaction_id": txn.transaction_id,
@@ -46,6 +55,9 @@ def txn_to_dict(txn: Transaction, db: Session):
         "location": txn.location,
         "latitude": txn.latitude,
         "longitude": txn.longitude,
+        "receiver_city": recv_city_name,
+        "receiver_lat": recv_lat,
+        "receiver_lng": recv_lng,
         "device_id": txn.device_id,
         "account_age_days": sender.account_age_days if sender else 0,
         "is_new_device": txn.is_new_device,

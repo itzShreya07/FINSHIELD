@@ -29,7 +29,7 @@ function analyzeQuery(query: string, transactions: Transaction[]): React.ReactNo
         const top5 = [...transactions].sort((a, b) => b.risk_score - a.risk_score).slice(0, 5);
         return (
             <div>
-                <div style={{ fontWeight: 700, color: "#ef4444", marginBottom: 8 }}>🚨 Top 5 Highest Risk Transactions</div>
+                <div style={{ fontWeight: 700, color: "#ef4444", marginBottom: 8 }}>Top 5 Highest Risk Transactions</div>
                 {top5.map(t => (
                     <div key={t.transaction_id} style={{ padding: "6px 10px", background: "rgba(239,68,68,0.08)", borderRadius: 6, marginBottom: 4, fontSize: 12 }}>
                         <strong>{t.transaction_id}</strong> — <span style={{ color: "#ef4444" }}>{(t.risk_score * 100).toFixed(0)}% risk</span>
@@ -44,10 +44,10 @@ function analyzeQuery(query: string, transactions: Transaction[]): React.ReactNo
         const top = [...suspicious].sort((a, b) => b.risk_score - a.risk_score)[0];
         if (!top) return <span>No suspicious transactions found in the current data.</span>;
         const flags = [];
-        if (top.is_new_device) flags.push("📱 New device detected");
-        if (top.is_new_recipient) flags.push("👤 Unknown/new recipient");
-        if (top.geo_mismatch) flags.push("🌍 Geographic location mismatch");
-        if (top.amount > 50000) flags.push(`💰 High transaction amount (₹${top.amount.toLocaleString("en-IN", { maximumFractionDigits: 0 })})`);
+        if (top.is_new_device) flags.push("New device detected");
+        if (top.is_new_recipient) flags.push("Unknown/new recipient");
+        if (top.geo_mismatch) flags.push("Geographic location mismatch");
+        if (top.amount > 50000) flags.push(`High transaction amount (₹${top.amount.toLocaleString("en-IN", { maximumFractionDigits: 0 })})`);
         return (
             <div>
                 <div style={{ fontWeight: 700, marginBottom: 8 }}>Analysis: <span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 12 }}>{top.transaction_id}</span></div>
@@ -62,7 +62,7 @@ function analyzeQuery(query: string, transactions: Transaction[]): React.ReactNo
     if (q.includes("risk score") || q.includes("score") || q.includes("how is")) {
         return (
             <div>
-                <div style={{ fontWeight: 700, marginBottom: 10 }}>📊 FinShield Risk Scoring Model</div>
+                <div style={{ fontWeight: 700, marginBottom: 10 }}>FinShield Risk Scoring Model</div>
                 <div style={{ fontSize: 12, lineHeight: 1.8, color: "var(--text-secondary)" }}>
                     Risk scores are calculated using 5 weighted factors:<br />
                     <strong style={{ color: "#f97316" }}>• Amount Score (30%)</strong> — unusually large transaction relative to account average<br />
@@ -79,7 +79,7 @@ function analyzeQuery(query: string, transactions: Transaction[]): React.ReactNo
     if (q.includes("summary") || q.includes("overview") || q.includes("status") || q === "") {
         return (
             <div>
-                <div style={{ fontWeight: 700, marginBottom: 12 }}>📋 Current Platform Summary</div>
+                <div style={{ fontWeight: 700, marginBottom: 12 }}>Platform Summary</div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, fontSize: 12 }}>
                     <div style={{ padding: "8px 12px", background: "rgba(37,99,235,0.1)", borderRadius: 8 }}>
                         <div style={{ color: "var(--text-muted)" }}>Total Transactions</div>
@@ -114,7 +114,7 @@ function analyzeQuery(query: string, transactions: Transaction[]): React.ReactNo
         const topAccounts = Object.entries(accountMap).sort((a, b) => b[1].risk - a[1].risk).slice(0, 5);
         return (
             <div>
-                <div style={{ fontWeight: 700, marginBottom: 10 }}>👤 Highest Risk Accounts</div>
+                <div style={{ fontWeight: 700, marginBottom: 10 }}>Highest Risk Accounts</div>
                 {topAccounts.map(([acc, info]) => (
                     <div key={acc} style={{ display: "flex", justifyContent: "space-between", padding: "6px 10px", background: "rgba(255,255,255,0.03)", borderRadius: 6, marginBottom: 4, fontSize: 12 }}>
                         <span><strong>{info.name}</strong> <span style={{ color: "var(--text-muted)" }}>({acc})</span></span>
@@ -146,7 +146,7 @@ interface Props {
 export default function FraudAssistant({ isOpen, onClose, transactions }: Props) {
     const [input, setInput] = useState("");
     const [messages, setMessages] = useState<Message[]>([
-        { role: "assistant", content: "👋 I'm your Fraud Copilot. Ask me about flagged transactions, risk scores, or account patterns." }
+        { role: "assistant", content: "I'm your Fraud Copilot. Ask me about flagged transactions, risk scores, or account patterns." }
     ]);
     const endRef = useRef<HTMLDivElement>(null);
 
@@ -182,7 +182,6 @@ export default function FraudAssistant({ isOpen, onClose, transactions }: Props)
             }}>
                 {/* Header */}
                 <div style={{ padding: "20px 20px 16px", borderBottom: "1px solid var(--border-subtle)", display: "flex", alignItems: "center", gap: 10 }}>
-                    <div style={{ fontSize: 22 }}>🤖</div>
                     <div>
                         <div style={{ fontWeight: 700, fontSize: 15 }}>Fraud Copilot</div>
                         <div style={{ fontSize: 11, color: "#22c55e" }}>● Rule-based Analysis Engine</div>

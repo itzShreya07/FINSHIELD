@@ -21,20 +21,20 @@ interface SimResponse {
 const ATTACKS = [
     {
         id: "rapid-transfer",
-        label: "🚀 Rapid Transfer Attack",
+        label: "Rapid Transfer Attack",
         desc: "5 high-value transfers in seconds — money mule pattern",
         color: "#f97316",
     },
     {
         id: "account-takeover",
-        label: "🧑‍💻 Account Takeover",
+        label: "Account Takeover",
         desc: "New device + massive amount + geo mismatch",
         color: "#ef4444",
     },
     {
         id: "geo-anomaly",
-        label: "🌍 Geo Anomaly Attack",
-        desc: "Impossible travel: Mumbai → New York in minutes",
+        label: "Geo Anomaly Attack",
+        desc: "Impossible travel: Mumbai to New York in minutes",
         color: "#8b5cf6",
     },
 ];
@@ -74,7 +74,6 @@ export default function SimulationPanel() {
                     cursor: "pointer", transition: "all 0.2s", fontFamily: "Inter, sans-serif",
                 }}
             >
-                <span style={{ fontSize: 18 }}>⚡</span>
                 Fraud Simulation Mode
                 <span style={{
                     marginLeft: "auto", fontSize: 11, color: "rgba(239,68,68,0.7)",
@@ -113,7 +112,7 @@ export default function SimulationPanel() {
                                 onMouseLeave={e => { if (!loading) (e.currentTarget as HTMLElement).style.background = `${atk.color}11`; }}
                             >
                                 <div style={{ fontSize: 14, fontWeight: 700, color: atk.color, marginBottom: 6 }}>
-                                    {loading === atk.id ? "⏳ Running…" : atk.label}
+                                    {loading === atk.id ? "Running..." : atk.label}
                                 </div>
                                 <div style={{ fontSize: 11, color: "var(--text-muted)", lineHeight: 1.4 }}>{atk.desc}</div>
                             </button>
@@ -122,14 +121,14 @@ export default function SimulationPanel() {
 
                     {error && (
                         <div style={{ padding: "10px 14px", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", borderRadius: 8, fontSize: 12, color: "#ef4444" }}>
-                            ❌ {error}
+                            {error}
                         </div>
                     )}
 
                     {results && (
                         <div style={{ animation: "fadeIn 0.3s ease" }}>
                             <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text-secondary)", marginBottom: 10, textTransform: "uppercase", letterSpacing: "0.8px" }}>
-                                ✅ Simulation Complete — {results.transactions.length} transaction{results.transactions.length > 1 ? "s" : ""} injected
+                                Simulation Complete — {results.transactions.length} transaction{results.transactions.length > 1 ? "s" : ""} injected
                                 {results.note && <span style={{ color: "#8b5cf6", marginLeft: 8, fontWeight: 400, textTransform: "none" }}>({results.note})</span>}
                             </div>
                             <div style={{ maxHeight: 200, overflowY: "auto" }}>

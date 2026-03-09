@@ -34,28 +34,28 @@ function getRiskColor(score: number) {
 
 const SidebarNav = ({ active }: { active: string }) => {
     const links = [
-        { href: "/", label: "Transaction Monitor", icon: "📊" },
-        { href: "/alerts", label: "Fraud Alerts", icon: "🚨" },
-        { href: "/network", label: "Fraud Network", icon: "🕸️" },
-        { href: "/behavioral", label: "Behavioral Analysis", icon: "📈" },
-        { href: "/geo-risk", label: "Geo-Risk Monitor", icon: "🌍" },
-        { href: "/scam-intel", label: "Scam Intel Tool", icon: "🔍" },
+        { href: "/", label: "Transaction Monitor" },
+        { href: "/alerts", label: "Fraud Alerts" },
+        { href: "/network", label: "Fraud Network" },
+        { href: "/behavioral", label: "Behavioral Analysis" },
+        { href: "/geo-risk", label: "Geo-Risk Monitor" },
+        { href: "/scam-intel", label: "Scam Intel Tool" },
     ];
     return (
         <aside className="sidebar">
             <div className="sidebar-logo">
-                <div className="logo-text">🛡️ FinShield</div>
+                <div className="logo-text">FinShield</div>
                 <div className="logo-sub">Fraud Intelligence Platform</div>
             </div>
             <nav className="sidebar-nav">
                 <div className="nav-section-label">Monitoring</div>
-                {links.slice(0, 2).map(l => <a key={l.href} href={l.href} className={`nav-item ${active === l.href ? "active" : ""}`}><span>{l.icon}</span><span>{l.label}</span></a>)}
+                {links.slice(0, 2).map(l => <a key={l.href} href={l.href} className={`nav-item ${active === l.href ? "active" : ""}`}><span>{l.label}</span></a>)}
                 <div className="nav-section-label">Intelligence</div>
-                {links.slice(2, 5).map(l => <a key={l.href} href={l.href} className={`nav-item ${active === l.href ? "active" : ""}`}><span>{l.icon}</span><span>{l.label}</span></a>)}
+                {links.slice(2, 5).map(l => <a key={l.href} href={l.href} className={`nav-item ${active === l.href ? "active" : ""}`}><span>{l.label}</span></a>)}
                 <div className="nav-section-label">Tools</div>
-                {links.slice(5).map(l => <a key={l.href} href={l.href} className={`nav-item ${active === l.href ? "active" : ""}`}><span>{l.icon}</span><span>{l.label}</span></a>)}
+                {links.slice(5).map(l => <a key={l.href} href={l.href} className={`nav-item ${active === l.href ? "active" : ""}`}><span>{l.label}</span></a>)}
             </nav>
-            <div className="sidebar-footer"><span className="status-dot" /> System Online · v1.0.0</div>
+            <div className="sidebar-footer"><span className="status-dot" /> System Online · v2.0.0</div>
         </aside>
     );
 };
@@ -109,22 +109,22 @@ export default function AlertsPage() {
                             <div className="stat-card blue">
                                 <div className="stat-label">Total Alerts</div>
                                 <div className="stat-value">{summary.total}</div>
-                                <div className="stat-icon" style={{ background: "rgba(37,99,235,0.15)", color: "#3b82f6" }}>🔔</div>
+                                <div className="stat-icon" style={{ background: "rgba(37,99,235,0.15)", color: "#3b82f6" }}>ALT</div>
                             </div>
                             <div className="stat-card red">
                                 <div className="stat-label">Critical</div>
                                 <div className="stat-value" style={{ color: "#ef4444" }}>{summary.critical}</div>
-                                <div className="stat-icon" style={{ background: "rgba(239,68,68,0.12)", color: "#ef4444" }}>🚨</div>
+                                <div className="stat-icon" style={{ background: "rgba(239,68,68,0.12)", color: "#ef4444" }}>CRI</div>
                             </div>
                             <div className="stat-card yellow">
                                 <div className="stat-label">High Severity</div>
                                 <div className="stat-value" style={{ color: "#f97316" }}>{summary.high}</div>
-                                <div className="stat-icon" style={{ background: "rgba(249,115,22,0.12)", color: "#f97316" }}>⚠️</div>
+                                <div className="stat-icon" style={{ background: "rgba(249,115,22,0.12)", color: "#f97316" }}>HI</div>
                             </div>
                             <div className="stat-card green">
                                 <div className="stat-label">Unresolved</div>
                                 <div className="stat-value" style={{ color: "#eab308" }}>{summary.unresolved}</div>
-                                <div className="stat-icon" style={{ background: "rgba(234,179,8,0.12)", color: "#eab308" }}>⏳</div>
+                                <div className="stat-icon" style={{ background: "rgba(234,179,8,0.12)", color: "#eab308" }}>OPEN</div>
                             </div>
                         </div>
                     )}
@@ -144,7 +144,7 @@ export default function AlertsPage() {
                             <div className="alert-card-header">
                                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                                     <span className={`badge badge-${alert.severity}`}>
-                                        {alert.severity === "critical" ? "🚨" : alert.severity === "high" ? "⚠" : "💡"} {alert.severity.toUpperCase()}
+                                        {alert.severity.toUpperCase()}
                                     </span>
                                     <span className="mono" style={{ fontSize: 12, color: "var(--accent-cyan)" }}>{alert.transaction_id}</span>
                                     <span style={{ fontSize: 12, color: "var(--text-muted)" }}>{alert.account_name} ({alert.account_number})</span>
@@ -174,12 +174,12 @@ export default function AlertsPage() {
                                     <strong style={{ color: "var(--text-primary)" }}>Fraud Signal: </strong>{alert.fraud_reason}
                                 </div>
                                 <div style={{ display: "flex", gap: 16, flexWrap: "wrap", fontSize: 12, color: "var(--text-muted)", marginBottom: 10 }}>
-                                    <span>📍 {alert.location}</span>
-                                    <span>💰 ₹{alert.amount?.toLocaleString("en-IN", { maximumFractionDigits: 0 })}</span>
-                                    <span>🏦 {alert.account_number}</span>
+                                    <span>Location: {alert.location}</span>
+                                    <span>Amount: ₹{alert.amount?.toLocaleString("en-IN", { maximumFractionDigits: 0 })}</span>
+                                    <span>Account: {alert.account_number}</span>
                                 </div>
                                 <div className="alert-action">
-                                    💡 {alert.recommended_action}
+                                    Recommendation: {alert.recommended_action}
                                 </div>
                             </div>
                         </div>
@@ -187,7 +187,6 @@ export default function AlertsPage() {
 
                     {alerts.length === 0 && (
                         <div className="empty-state">
-                            <div style={{ fontSize: 48 }}>🛡️</div>
                             <div style={{ marginTop: 12, fontSize: 15, fontWeight: 600 }}>No Alerts Found</div>
                             <div style={{ fontSize: 12, marginTop: 6 }}>Start the backend and run the seed script to populate data.</div>
                         </div>

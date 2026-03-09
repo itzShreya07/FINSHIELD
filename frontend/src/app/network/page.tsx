@@ -29,25 +29,25 @@ const groupColor = { critical: "#ef4444", high: "#f97316", medium: "#eab308" };
 
 const SidebarNav = ({ active }: { active: string }) => {
     const links = [
-        { href: "/", label: "Transaction Monitor", icon: "📊" },
-        { href: "/alerts", label: "Fraud Alerts", icon: "🚨" },
-        { href: "/network", label: "Fraud Network", icon: "🕸️" },
-        { href: "/behavioral", label: "Behavioral Analysis", icon: "📈" },
-        { href: "/geo-risk", label: "Geo-Risk Monitor", icon: "🌍" },
-        { href: "/scam-intel", label: "Scam Intel Tool", icon: "🔍" },
+        { href: "/", label: "Transaction Monitor" },
+        { href: "/alerts", label: "Fraud Alerts" },
+        { href: "/network", label: "Fraud Network" },
+        { href: "/behavioral", label: "Behavioral Analysis" },
+        { href: "/geo-risk", label: "Geo-Risk Monitor" },
+        { href: "/scam-intel", label: "Scam Intel Tool" },
     ];
     return (
         <aside className="sidebar">
-            <div className="sidebar-logo"><div className="logo-text">🛡️ FinShield</div><div className="logo-sub">Fraud Intelligence Platform</div></div>
+            <div className="sidebar-logo"><div className="logo-text">FinShield</div><div className="logo-sub">Fraud Intelligence Platform</div></div>
             <nav className="sidebar-nav">
                 <div className="nav-section-label">Monitoring</div>
-                {links.slice(0, 2).map(l => <a key={l.href} href={l.href} className={`nav-item ${active === l.href ? "active" : ""}`}><span>{l.icon}</span><span>{l.label}</span></a>)}
+                {links.slice(0, 2).map(l => <a key={l.href} href={l.href} className={`nav-item ${active === l.href ? "active" : ""}`}><span>{l.label}</span></a>)}
                 <div className="nav-section-label">Intelligence</div>
-                {links.slice(2, 5).map(l => <a key={l.href} href={l.href} className={`nav-item ${active === l.href ? "active" : ""}`}><span>{l.icon}</span><span>{l.label}</span></a>)}
+                {links.slice(2, 5).map(l => <a key={l.href} href={l.href} className={`nav-item ${active === l.href ? "active" : ""}`}><span>{l.label}</span></a>)}
                 <div className="nav-section-label">Tools</div>
-                {links.slice(5).map(l => <a key={l.href} href={l.href} className={`nav-item ${active === l.href ? "active" : ""}`}><span>{l.icon}</span><span>{l.label}</span></a>)}
+                {links.slice(5).map(l => <a key={l.href} href={l.href} className={`nav-item ${active === l.href ? "active" : ""}`}><span>{l.label}</span></a>)}
             </nav>
-            <div className="sidebar-footer"><span className="status-dot" /> System Online</div>
+            <div className="sidebar-footer"><span className="status-dot" /> System Online · v2.0.0</div>
         </aside>
     );
 };
@@ -119,7 +119,7 @@ export default function NetworkPage() {
             .call(d3.drag<SVGGElement, any>()
                 .on("start", (event, d) => { if (!event.active) sim.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
                 .on("drag", (event, d) => { d.fx = event.x; d.fy = event.y; })
-                .on("end", (event, d) => { if (!event.active) sim.alphaTarget(0); d.fx = null; d.fy = null; })
+                .on("end", (event, d) => { if (!event.active) sim.alphaTarget(0); d.fx = null; d.fy = null; }) as any
             )
             .on("click", (_, d) => setSelectedNode(d as Node))
             .on("mousemove", (event, d: any) => {
@@ -206,7 +206,7 @@ export default function NetworkPage() {
 
                     {clusters.length > 0 && (
                         <div className="mt-4">
-                            <div className="section-title">🔗 Detected Fraud Clusters</div>
+                            <div className="section-title">Detected Fraud Clusters</div>
                             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 12 }}>
                                 {clusters.map(c => (
                                     <div key={c.cluster_id} className="card" style={{ padding: 16 }}>
@@ -229,8 +229,7 @@ export default function NetworkPage() {
 
                     {!graphData && (
                         <div className="empty-state">
-                            <div style={{ fontSize: 48 }}>🕸️</div>
-                            <div style={{ marginTop: 12, fontSize: 15, fontWeight: 600 }}>Loading Fraud Network…</div>
+                            <div style={{ marginTop: 12, fontSize: 15, fontWeight: 600 }}>Loading Fraud Network...</div>
                             <div style={{ fontSize: 12, marginTop: 6 }}>Connect to the backend to render the graph.</div>
                         </div>
                     )}
