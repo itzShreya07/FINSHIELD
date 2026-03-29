@@ -1,7 +1,0 @@
-{
-  "/page": "app/page.js",
-  "/scam-intel/page": "app/scam-intel/page.js",
-  "/network/page": "app/network/page.js",
-  "/behavioral/page": "app/behavioral/page.js",
-  "/geo-risk/page": "app/geo-risk/page.js"
-}
